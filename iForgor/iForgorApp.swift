@@ -6,12 +6,17 @@
 //
 
 import SwiftUI
+import ComposableArchitecture
 
 @main
 struct iForgorApp: App {
+    static let kanyeFeatureStore = Store(initialState: KanyeQuoteFeature.State(theme: .theme1, quote: "iForgor xD")) {
+        KanyeQuoteFeature()
+    }
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            KanyeQuoteView(store: iForgorApp.kanyeFeatureStore)
         }
     }
 }

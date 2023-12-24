@@ -7,30 +7,57 @@
 
 import XCTest
 @testable import iForgor
+import ComposableArchitecture
 
+@MainActor
 final class iForgorTests: XCTestCase {
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    func testKanyeQuoteFeature_onAppear() async {
+        let testStore = TestStore(initialState: KanyeQuoteFeature.State(theme: .theme1, quote: "is Fetching Kanye Quote")) {
+            KanyeQuoteFeature()
+        } withDependencies: { kanyeQuoteClient in
+            kanyeQuoteClient.kanyeQuoteClient.fetch = {
+                .success("This is a cool kanye quote")
+            }
+        }
+        
+        testStore.exhaustivity = .off
+        await testStore.send(.onAppear)
+        await testStore.receive(\.kanyeQuoteResponse, timeout: .seconds(1)) {
+            XCTAssertFalse($0.theme == .error)
+            $0.quote = "This is a cool kanye quote"
         }
     }
-
+    
+    func testKanyeQuoteFeature_refreshButtonTapped() async {
+        let testStore = TestStore(initialState: KanyeQuoteFeature.State(theme: .theme1, quote: "is Fetching Kanye Quote")) {
+            KanyeQuoteFeature()
+        } withDependencies: { kanyeQuoteClient in
+            kanyeQuoteClient.kanyeQuoteClient.fetch = {
+                .success("This is a cool kanye quote")
+            }
+        }
+        
+        testStore.exhaustivity = .off
+        await testStore.send(.refreshButtonTapped)
+        await testStore.receive(\.kanyeQuoteResponse, timeout: .seconds(1)) {
+            XCTAssertFalse($0.theme == .error)
+            $0.quote = "This is a cool kanye quote"
+        }
+    }
+    
+    func testKanyeQuoteFeatureOnError() async {
+        let testStore = TestStore(initialState: KanyeQuoteFeature.State(theme: .theme1, quote: "is Fetching Kanye Quote")) {
+            KanyeQuoteFeature()
+        } withDependencies: { kanyeQuoteClient in
+            kanyeQuoteClient.kanyeQuoteClient.fetch = {
+                .failure(KanyeQuoteClient.KanyeQuoteClientError.fetchingError)
+            }
+        }
+        
+        await testStore.send(.onAppear)
+        await testStore.receive(\.kanyeQuoteResponse, timeout: .seconds(1)) {
+            $0.theme = .error
+        }
+    }
 }
