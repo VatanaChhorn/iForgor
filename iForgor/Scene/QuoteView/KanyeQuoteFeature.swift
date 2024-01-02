@@ -31,9 +31,9 @@ struct KanyeQuoteFeature {
                     let quoteMethod = kanyeQuoteClient.fetch
                     do {
                         let quote: Result<String, any Error> = try await quoteMethod()
-                        await send(.kanyeQuoteResponse(quote))
+                        await send(.kanyeQuoteResponse(quote), animation: .interactiveSpring)
                     } catch {
-                        await send(.kanyeQuoteResponse(.failure(error)))
+                        await send(.kanyeQuoteResponse(.failure(error)), animation: .easeInOut)
                     }
                 }
             case let .kanyeQuoteResponse(result):
